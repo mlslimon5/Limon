@@ -11,5 +11,10 @@ module.exports = {
     antiLink: false,
     antiLinkKick: true,
     antiLinkWarnLimit: 3,
-    linkWarnings: {}
+    linkWarnings: {},
+    
+    antiSticker: false,
+antiStickerKick: true,
+antiStickerWarnLimit: 3,
+stickerWarnings: {},
 }
