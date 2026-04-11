@@ -153,3 +153,67 @@ if (settings.antiLink && from.endsWith("@g.us")) {
         console.log("AntiLink Error:", err)
     }
     }
+// 🖼️ ANTISTICKER SYSTEM
+if (settings.antiSticker) {
+    try {
+        const isGroup = from.endsWith("@g.us")
+        const metadata = isGroup ? await sock.groupMetadata(from) : null
+        const participants = metadata?.participants || []
+
+        const isAdmin = participants.find(p => p.id === sender)?.admin
+        const isOwner = sender === settings.ownerNumber
+        const isBotSelf = sender === botNumber
+
+        // ✅ bypass
+        if (isAdmin || isOwner || isBotSelf) return
+
+        const isSticker = msg.message.stickerMessage
+
+        if (!isSticker) return
+
+        // 🔍 simple 18+ keyword detect
+        const badKeywords = ["sex", "porn", "18+", "xxx", "nude"]
+
+        const stickerText =
+            msg.message?.stickerMessage?.fileName?.toLowerCase() || ""
+
+        const isBad = badKeywords.some(word => stickerText.includes(word))
+
+        // 👉 চাইলে সব sticker block করতে চাইলে নিচেরটা use করো:
+        // const isBad = true
+
+        if (!isBad) return
+
+        // ❌ Delete
+        await sock.sendMessage(from, { delete: msg.key })
+
+        // ⚠️ Warning
+        if (!settings.stickerWarnings[sender]) {
+            settings.stickerWarnings[sender] = 0
+        }
+
+        settings.stickerWarnings[sender]++
+
+        let warn = settings.stickerWarnings[sender]
+
+        await sock.sendMessage(from, {
+            text: `🚫 @${sender.split("@")[0]} Bad sticker not allowed!\n⚠️ Warning: ${warn}/${settings.antiStickerWarnLimit}`,
+            mentions: [sender]
+        })
+
+        // 👢 Kick
+        if (warn >= settings.antiStickerWarnLimit && settings.antiStickerKick && isGroup) {
+            await sock.groupParticipantsUpdate(from, [sender], "remove")
+
+            await sock.sendMessage(from, {
+                text: `👢 @${sender.split("@")[0]} removed (Bad Sticker)`,
+                mentions: [sender]
+            })
+
+            delete settings.stickerWarnings[sender]
+        }
+
+    } catch (err) {
+        console.log("AntiSticker Error:", err)
+    }
+            }
