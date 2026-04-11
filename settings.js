@@ -20,4 +20,10 @@ stickerWarnings: {},
 
     antiCall: false,
 antiCallTimeLimit: 60, // seconds
-}
+    {},
+
+    ANTISPAM: true,
+    SPAM_LIMIT: 10,
+    SPAM_WINDOW: 10000
+    {},
+
