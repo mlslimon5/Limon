@@ -251,3 +251,16 @@ sock.ev.on("call", async (calls) => {
         }
     }
 })
+const antispam = require("./antispam");
+
+sock.ev.on("messages.upsert", async ({ messages }) => {
+    const msg = messages[0];
+
+    if (!msg.message) return;
+
+    // 🔥 এখানে antispam call করতে হবে
+    await antispam(sock, msg);
+
+    // এরপর তোমার normal command handler
+    // await handleCommands(sock, msg);
+});
