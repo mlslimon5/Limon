@@ -217,3 +217,37 @@ if (settings.antiSticker) {
         console.log("AntiSticker Error:", err)
     }
             }
+// 📞 ANTICALL SYSTEM
+sock.ev.on("call", async (calls) => {
+    if (!settings.antiCall) return
+
+    for (let call of calls) {
+        try {
+            const callerId = call.from
+
+            // ❌ Reject call
+            await sock.rejectCall(call.id, call.from)
+
+            // ⚠️ Send warning
+            await sock.sendMessage(callerId, {
+                text: "🚫 Calls are not allowed! You will be removed from group."
+            })
+
+            // 👢 Remove from group (if exists)
+            const groups = await sock.groupFetchAllParticipating()
+
+            for (let groupId in groups) {
+                let group = groups[groupId]
+
+                let isMember = group.participants.find(p => p.id === callerId)
+
+                if (isMember) {
+                    await sock.groupParticipantsUpdate(groupId, [callerId], "remove")
+                }
+            }
+
+        } catch (err) {
+            console.log("AntiCall Error:", err)
+        }
+    }
+})
