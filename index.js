@@ -97,3 +97,59 @@ async function startBot() {
 }
 
 startBot()
+// 🔗 ANTILINK SYSTEM
+if (settings.antiLink && from.endsWith("@g.us")) {
+    try {
+        const metadata = await sock.groupMetadata(from)
+        const participants = metadata.participants
+
+        const isAdmin = participants.find(p => p.id === sender)?.admin
+        const isOwner = sender === settings.ownerNumber
+        const isBotSelf = sender === botNumber
+
+        // ✅ bypass
+        if (isAdmin || isOwner || isBotSelf) return
+
+        const textMsg =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage?.text ||
+            ""
+
+        // 🔍 Link detect regex (strong)
+        const linkRegex = /(https?:\/\/|www\.|chat\.whatsapp\.com|t\.me|youtube\.com|youtu\.be|facebook\.com)/gi
+
+        if (!linkRegex.test(textMsg)) return
+
+        // ❌ Delete message
+        await sock.sendMessage(from, { delete: msg.key })
+
+        // ⚠️ Warning system
+        if (!settings.linkWarnings[sender]) {
+            settings.linkWarnings[sender] = 0
+        }
+
+        settings.linkWarnings[sender]++
+
+        let warn = settings.linkWarnings[sender]
+
+        await sock.sendMessage(from, {
+            text: `🚫 @${sender.split("@")[0]} Link not allowed!\n⚠️ Warning: ${warn}/${settings.antiLinkWarnLimit}`,
+            mentions: [sender]
+        })
+
+        // 👢 Kick
+        if (warn >= settings.antiLinkWarnLimit && settings.antiLinkKick) {
+            await sock.groupParticipantsUpdate(from, [sender], "remove")
+
+            await sock.sendMessage(from, {
+                text: `👢 @${sender.split("@")[0]} removed (Link spam)`,
+                mentions: [sender]
+            })
+
+            delete settings.linkWarnings[sender]
+        }
+
+    } catch (err) {
+        console.log("AntiLink Error:", err)
+    }
+    }
