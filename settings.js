@@ -17,4 +17,7 @@ module.exports = {
 antiStickerKick: true,
 antiStickerWarnLimit: 3,
 stickerWarnings: {},
+
+    antiCall: false,
+antiCallTimeLimit: 60, // seconds
 }
